@@ -48,6 +48,9 @@ public class Process  implements Runnable {
                 Thread.sleep(500);
 
                 if(Thread.currentThread().getName().equals("P1")){
+
+                    this.clock++;
+                    System.out.println("P1" + " clock : " + this.clock);
                     Bidule b1 = new Bidule("ga",this.clock);
                     //Bidule b2 = new Bidule("bu",this.clock);
                     System.out.println(Thread.currentThread().getName() + " send : " + b1.getMachin());
@@ -58,7 +61,7 @@ public class Process  implements Runnable {
 
                 e.printStackTrace();
             }
-            this.clock++;
+
         }
 
         // liberation du bus
