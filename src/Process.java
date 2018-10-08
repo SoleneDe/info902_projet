@@ -38,23 +38,34 @@ public class Process  implements Runnable {
         }
     }
 
+    public void sendTo(Object o, int to) {
+        this.clock++;
+        System.out.println(Thread.currentThread().getName() + " send [" + o + "] to [id " + to + "], with clock at " + this.clock);
+        MessageTo m = new MessageTo(o, this.clock, to);
+        bus.postEvent(m);
+    }
+
+    @Subscribe
+    public void onReceive(MessageTo m) {
+        if (this.id == m.getIdDest()) { // the current process is the destination
+            System.out.println(Thread.currentThread().getName() + " receives: " + m.getPayload()  + " for " + this.thread.getName());
+            this.clock = Math.max(this.clock, m.getClock());
+            this.clock++;
+            System.out.println("New clock (" + Thread.currentThread().getName() + "): " + this.clock);
+        }
+    }
+
     public void run(){
 
-        System.out.println(Thread.currentThread().getName() + " id :" + this.id);
+        System.out.println(Thread.currentThread().getName() + " id: " + this.id);
 
         while(this.alive){
-            System.out.println(Thread.currentThread().getName() + " clock : " + this.clock);
             try{
                 Thread.sleep(500);
 
                 if(Thread.currentThread().getName().equals("P1")){
                     // send
-                    this.clock++;
-                    System.out.println("P1" + " clock : " + this.clock);
-                    Message m1 = new BroadcastMessage("ga",this.clock);
-                    //Message m2 = new Message("bu",this.clock);
-                    System.out.println(Thread.currentThread().getName() + " send : " + m1.getPayload());
-                    bus.postEvent(m1);
+                    sendTo("Hello", 1);
                 }
 
             }catch(Exception e){
@@ -82,5 +93,9 @@ public class Process  implements Runnable {
     }
     public void stop(){
         this.alive = false;
+    }
+
+    public int getClock() {
+        return clock;
     }
 }
