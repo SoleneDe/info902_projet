@@ -20,6 +20,9 @@ public class Launcher {
         p3.waitStopped();
 
 
+        System.out.println("Final clocks: " + p1.getClock() + ", " + p2.getClock() + ", " + p3.getClock());
+
+
 
     }
 
