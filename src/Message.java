@@ -1,6 +1,6 @@
-public class Message {
-    private Object payload=null;
-    private int clock;
+public abstract class Message {
+    protected Object payload=null;
+    protected int clock;
 
     public Message(Object payload, int clock){
         this.payload = payload;

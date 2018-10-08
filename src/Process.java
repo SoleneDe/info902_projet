@@ -25,7 +25,7 @@ public class Process  implements Runnable {
 
     // Declaration de la methode de callback invoquee lorsqu'un message de type Message transite sur le bus
     @Subscribe
-    public void onMessageBus(Message m){
+    public void onMessageBus(BroadcastMessage m){
         //receive
         System.out.println(Thread.currentThread().getName() + " receives: " + m.getPayload() + " for " + this.thread.getName());
         if(m.getClock() > this.clock)
@@ -51,7 +51,7 @@ public class Process  implements Runnable {
                     // send
                     this.clock++;
                     System.out.println("P1" + " clock : " + this.clock);
-                    Message m1 = new Message("ga",this.clock);
+                    Message m1 = new BroadcastMessage("ga",this.clock);
                     //Message m2 = new Message("bu",this.clock);
                     System.out.println(Thread.currentThread().getName() + " send : " + m1.getPayload());
                     bus.postEvent(m1);
