@@ -1,8 +1,8 @@
-public abstract class Message {
+public abstract class AbstractMessage {
     protected Object payload=null;
     protected int clock;
 
-    public Message(Object payload, int clock){
+    public AbstractMessage(Object payload, int clock){
         this.payload = payload;
         this.clock = clock;
     }

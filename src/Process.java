@@ -23,20 +23,34 @@ public class Process  implements Runnable {
         this.thread.start();
     }
 
-    // Declaration de la methode de callback invoquee lorsqu'un message de type Message transite sur le bus
-    @Subscribe
-    public void onMessageBus(BroadcastMessage m){
-        //receive
-        System.out.println(Thread.currentThread().getName() + " receives: " + m.getPayload() + " for " + this.thread.getName());
-        if(m.getClock() > this.clock)
-        {
-            this.clock = m.getClock()+1;
-        }
-        else
-        {
-            this.clock++;
-        }
+    public void broadcast(Object o)
+    {
+        this.clock++;
+        System.out.println(Thread.currentThread().getName() + " clock : " + this.clock);
+        AbstractMessage m1 = new BroadcastMessage(o,this.clock, Thread.currentThread().getName());
+        System.out.println(Thread.currentThread().getName() + " send : " + m1.getPayload());
+        bus.postEvent(m1);
     }
+
+    // Declaration de la methode de callback invoquee lorsqu'un message de type AbstractMessage transite sur le bus
+    @Subscribe
+    public void onBroadcast(BroadcastMessage m){
+        //receive
+        if(!m.getSender().equals(this.thread.getName())){
+            System.out.println(Thread.currentThread().getName() + " receives: " + m.getPayload() + " for " + this.thread.getName());
+            if(m.getClock() > this.clock)
+            {
+                this.clock = m.getClock()+1;
+            }
+            else
+            {
+                this.clock++;
+            }
+        }
+
+    }
+
+
 
     public void run(){
 
@@ -49,12 +63,7 @@ public class Process  implements Runnable {
 
                 if(Thread.currentThread().getName().equals("P1")){
                     // send
-                    this.clock++;
-                    System.out.println("P1" + " clock : " + this.clock);
-                    Message m1 = new BroadcastMessage("ga",this.clock);
-                    //Message m2 = new Message("bu",this.clock);
-                    System.out.println(Thread.currentThread().getName() + " send : " + m1.getPayload());
-                    bus.postEvent(m1);
+                    broadcast("ga");
                 }
 
             }catch(Exception e){
