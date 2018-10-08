@@ -63,11 +63,11 @@ public class Process  implements Runnable {
         // liberation du bus
         this.bus.unRegisterSubscriber(this);
         this.bus = null;
-        System.out.println(Thread.currentThread().getName() + " stoped");
+        System.out.println(Thread.currentThread().getName() + " stopped");
         this.dead = true;
     }
 
-    public void waitStoped(){
+    public void waitStopped(){
         while(!this.dead){
             try{
                 Thread.sleep(500);
