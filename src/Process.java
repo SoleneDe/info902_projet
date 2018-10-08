@@ -23,13 +23,14 @@ public class Process  implements Runnable {
         this.thread.start();
     }
 
-    // Declaration de la methode de callback invoquee lorsqu'un message de type Bidule transite sur le bus
+    // Declaration de la methode de callback invoquee lorsqu'un message de type Message transite sur le bus
     @Subscribe
-    public void onTrucSurBus(Bidule b){
-        System.out.println(Thread.currentThread().getName() + " receives: " + b.getMachin() + " for " + this.thread.getName());
-        if(b.getClock() > this.clock)
+    public void onMessageBus(Message m){
+        //receive
+        System.out.println(Thread.currentThread().getName() + " receives: " + m.getPayload() + " for " + this.thread.getName());
+        if(m.getClock() > this.clock)
         {
-            this.clock = b.getClock()+1;
+            this.clock = m.getClock()+1;
         }
         else
         {
@@ -39,7 +40,6 @@ public class Process  implements Runnable {
 
     public void run(){
 
-
         System.out.println(Thread.currentThread().getName() + " id :" + this.id);
 
         while(this.alive){
@@ -48,13 +48,13 @@ public class Process  implements Runnable {
                 Thread.sleep(500);
 
                 if(Thread.currentThread().getName().equals("P1")){
-
+                    // send
                     this.clock++;
                     System.out.println("P1" + " clock : " + this.clock);
-                    Bidule b1 = new Bidule("ga",this.clock);
-                    //Bidule b2 = new Bidule("bu",this.clock);
-                    System.out.println(Thread.currentThread().getName() + " send : " + b1.getMachin());
-                    bus.postEvent(b1);
+                    Message m1 = new Message("ga",this.clock);
+                    //Message m2 = new Message("bu",this.clock);
+                    System.out.println(Thread.currentThread().getName() + " send : " + m1.getPayload());
+                    bus.postEvent(m1);
                 }
 
             }catch(Exception e){
