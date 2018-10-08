@@ -6,6 +6,7 @@ public class Process  implements Runnable {
     private EventBusService bus;
     private boolean alive;
     private boolean dead;
+    private int clock = 0;
     private static int nbProcess = 0;
     private int id = Process.nbProcess++;
 
@@ -26,21 +27,29 @@ public class Process  implements Runnable {
     @Subscribe
     public void onTrucSurBus(Bidule b){
         System.out.println(Thread.currentThread().getName() + " receives: " + b.getMachin() + " for " + this.thread.getName());
+        if(b.getClock() > this.clock)
+        {
+            this.clock = b.getClock()+1;
+        }
+        else
+        {
+            this.clock++;
+        }
     }
 
     public void run(){
-        int loop = 0;
+
 
         System.out.println(Thread.currentThread().getName() + " id :" + this.id);
 
         while(this.alive){
-            System.out.println(Thread.currentThread().getName() + " Loop : " + loop);
+            System.out.println(Thread.currentThread().getName() + " clock : " + this.clock);
             try{
                 Thread.sleep(500);
 
                 if(Thread.currentThread().getName().equals("P1")){
-                    Bidule b1 = new Bidule("ga");
-                    Bidule b2 = new Bidule("bu");
+                    Bidule b1 = new Bidule("ga",this.clock);
+                    //Bidule b2 = new Bidule("bu",this.clock);
                     System.out.println(Thread.currentThread().getName() + " send : " + b1.getMachin());
                     bus.postEvent(b1);
                 }
@@ -48,7 +57,7 @@ public class Process  implements Runnable {
             }catch(Exception e){
                 e.printStackTrace();
             }
-            loop++;
+            this.clock++;
         }
 
         // liberation du bus
