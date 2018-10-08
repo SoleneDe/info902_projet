@@ -13,8 +13,8 @@ public class Launcher {
 
         p1.stop();
         p2.stop();
-        p1.waitStoped();
-        p2.waitStoped();
+        p1.waitStopped();
+        p2.waitStopped();
 
 
 
