@@ -55,6 +55,7 @@ public class Process  implements Runnable {
                 }
 
             }catch(Exception e){
+
                 e.printStackTrace();
             }
             this.clock++;
