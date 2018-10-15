@@ -1,6 +1,8 @@
 import com.google.common.eventbus.Subscribe;
 
-import java.util.ArrayList;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 
 
 public class Process  implements Runnable {
@@ -166,32 +168,37 @@ public class Process  implements Runnable {
 
         while(this.alive){
             try{
+                /*– Attend quelques secondes que tous les autres soient lancés
+                – Lance un dé n faces (n est laissé à votre choix)
+                – Diffuse le résultat
+                – Celui qui a tiré la plus grande valeur demande une section critique pour écrire son numéro dans un fichier
+                – Tous les Process se synchronisent avant de relancer le dé.*/
+
                 Thread.sleep(500);
+                int die = throwDie(6);
+                broadcast(die);
+
+                // TODO plus grande valeur
+
+                //request();
+
+                // écrire dans fichier
+                String result = die + " \n"; // TODO plus grande valeur
+                File file = new File("resultats.txt");
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
+                BufferedWriter bw = new BufferedWriter(fw);
+
+                bw.write(result);
+
+                bw.close();
+                fw.close();
+
+                //release();
 
                 synchronize();
-                System.out.println("Sync OK");
-
-                if(Thread.currentThread().getName().equals("P1")){
-                    // send
-
-                    //broadcast("ga");
-
-
-                    //sendTo("Hello", 1);
-
-                    request();
-                    //send message hello to 1
-                    sendTo("Hello", 1);
-                    release();
-
-
-
-                    // test synchronization, one process sleeps, others should wait as well
-                    System.out.println("WAIT");
-                    Thread.sleep(1300);
-                }
-
-
 
             }catch(Exception e){
 
@@ -205,11 +212,6 @@ public class Process  implements Runnable {
         System.out.println(Thread.currentThread().getName() + " stopped");
         this.dead = true;
     }
-
-
-
-
-
 
     public void waitStopped(){
         while(!this.dead){
@@ -226,5 +228,10 @@ public class Process  implements Runnable {
 
     public int getClock() {
         return clock;
+    }
+
+    public int throwDie(int n)
+    {
+        return (int)(Math.random() * n + 1);
     }
 }
