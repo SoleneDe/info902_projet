@@ -1,5 +1,7 @@
 import com.google.common.eventbus.Subscribe;
 
+import java.util.ArrayList;
+
 
 public class Process  implements Runnable {
     private Thread thread;
@@ -9,6 +11,7 @@ public class Process  implements Runnable {
     private int clock = 0;
     private static int nbProcess = 0;
     private int id = Process.nbProcess++;
+    private int ack = 0;
 
     public Process(String name){
 
@@ -64,8 +67,41 @@ public class Process  implements Runnable {
             System.out.println(Thread.currentThread().getName() + " receives: " + m.getPayload()  + " for " + this.thread.getName());
             this.clock = Math.max(this.clock, m.getClock());
             this.clock++;
-            System.out.println("New clock (" + Thread.currentThread().getName() + "): " + this.clock);
+            System.out.println("New clock (" + Thread.currentThread().getName() + ", id " + this.id + "): " + this.clock);
         }
+    }
+
+    public void synchronize() {
+        // check receptions
+        ack = 0;
+
+        this.clock++;
+        System.out.println(Thread.currentThread().getName() + " sends synchronization, with clock at " + this.clock);
+        MessageSynchro m = new MessageSynchro(this.clock, this.id);
+        bus.postEvent(m);
+
+        // block until everyone sends an ack
+        while(ack < Process.nbProcess)
+        {
+            try{
+                Thread.sleep(100);
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        System.out.println("[" + this.id + "] Every ACK received, with clock=" + this.getClock());
+    }
+
+    @Subscribe
+    public void onSynchronize(MessageSynchro m) {
+        System.out.println(Thread.currentThread().getName() + " receives synchro message from id " + m.getFrom());
+        this.clock = Math.max(this.clock, m.getClock());
+        this.clock++;
+        System.out.println("New clock (" + Thread.currentThread().getName() + ", id " + this.id + "): " + this.clock);
+
+        // received ACK
+        ack++;
     }
 
 
@@ -77,20 +113,26 @@ public class Process  implements Runnable {
             try{
                 Thread.sleep(500);
 
+                synchronize();
+                System.out.println("Sync OK");
+
                 if(Thread.currentThread().getName().equals("P1")){
                     // send
 
-                    broadcast("ga");
+                    //broadcast("ga");
+                    //sendTo("Hello", 1);
 
-                    sendTo("Hello", 1);
-
+                    // test synchronization, one process sleeps, others should wait as well
+                    System.out.println("WAIT");
+                    Thread.sleep(1300);
                 }
+
+
 
             }catch(Exception e){
 
                 e.printStackTrace();
             }
-
         }
 
         // liberation du bus
