@@ -9,7 +9,7 @@ public class Com {
     private EventBusService bus;
     private String stateToken = "null";
     private int ack = 0;
-    private Queue<AbstractMessage> mails;
+    private Queue<Object> mails;
     private Lamport clock;
 
 
@@ -24,6 +24,17 @@ public class Com {
         this.clock = clock;
         mails = new LinkedList<>();
     }
+
+
+    /**
+     * Take next mail, and remove it
+     * @return mail
+     */
+    public Object readNextMail()
+    {
+        return mails.remove();
+    }
+
 
 
     /**
@@ -113,8 +124,10 @@ public class Com {
         stateToken = "release";
     }*/
 
-
-
+    /**
+     * Send object to every other process' mailbox
+     * @param o data to send
+     */
     public void broadcast(Object o)
     {
         clock.lockClock();
@@ -128,52 +141,74 @@ public class Com {
         clock.unlockClock();
     }
 
+    /**
+     * Receive a message from a broadcast, added as mail
+     * @param m message to search for in the bus
+     */
     // Declaration de la methode de callback invoquee lorsqu'un message de type AbstractMessage transite sur le bus
     @Subscribe
     public void onBroadcast(BroadcastMessage m){
         //receive
         if(!m.getSender().equals(this.thread.getName())){
-            System.out.println(this.thread.getName() + " receives in broadcast: " + m.getPayload());
-            broadcastData.add(m.getPayload());
-            if(m.getClock() > this.clock)
-            {
-                this.clock = m.getClock()+1;
-            }
-            else
-            {
-                this.clock++;
-            }
+            clock.lockClock();
+
+            System.out.println("Receives in broadcast: " + m.getPayload());
+            mails.add(m.getPayload());
+
+            clock.setClock(Math.max(clock.getClock(), m.getClock()));
+            clock.setClock(clock.getClock() + 1);
+
+            clock.unlockClock();
         }
-
     }
 
+    /**
+     * Send an object to a specific process
+     * @param o data to be sent
+     * @param to id of the destination
+     */
+    public void sendTo(Object o, int to) {
+        clock.lockClock();
+        clock.setClock(clock.getClock() + 1);
 
-    /*public void sendTo(Object o, int to) {
-        this.clock++;
-        System.out.println(this.thread.getName() + " send [" + o + "] to [ P" + to+1 + "], with clock at " + this.clock);
-        MessageTo m = new MessageTo(o, this.clock, to);
+        System.out.println(this.thread.getName() + " send [" + o + "] to [ P" + to+1 + "], with clock at " + clock.getClock());
+        MessageTo m = new MessageTo(o, clock.getClock(), to);
+
         bus.postEvent(m);
+
+        clock.unlockClock();
     }
 
+    /**
+     * Receive a message from a one-to-one communication, added as mail
+     * @param m message to search for in the bus
+     */
     @Subscribe
     public void onReceive(MessageTo m) {
         if (this.id == m.getIdDest()) { // the current process is the destination
+            clock.lockClock();
+
             System.out.println(this.thread.getName() + " receives in one to one: " + m.getPayload());
-            this.clock = Math.max(this.clock, m.getClock());
-            this.clock++;
+            mails.add(m.getPayload());
 
-            //System.out.println("New clock (" + this.thread.getName() + "): " + this.clock);
+            clock.setClock(Math.max(clock.getClock(), m.getClock()));
+            clock.setClock(clock.getClock() + 1);
 
+            clock.unlockClock();
         }
     }
 
+    /**
+     * Send a sync message and wait for every other process to send one
+     */
     public void synchronize() {
         // check receptions
+        clock.lockClock();
+        clock.setClock(clock.getClock() + 1);
 
+        System.out.println(this.thread.getName() + " sends synchronization, with clock at " + clock.getClock());
+        MessageSynchro m = new MessageSynchro(clock.getClock(), this.id);
 
-        this.clock++;
-        System.out.println(this.thread.getName() + " sends synchronization, with clock at " + this.clock);
-        MessageSynchro m = new MessageSynchro(this.clock, this.id);
         bus.postEvent(m);
 
         // block until everyone sends an ack
@@ -185,22 +220,32 @@ public class Com {
                 e.printStackTrace();
             }
         }
-
-
-        System.out.println("[" + this.id + "] Every ACK received, with clock=" + this.getClock());
+        System.out.println("[" + this.id + "] Every ACK received, with clock=" + clock.getClock());
         ack -= Process.nbProcess;
+
+        clock.unlockClock();
     }
 
+    /**
+     * Receive messages to synchronize all processes
+     * @param m message to search for in the bus
+     */
     @Subscribe
     public void onSynchronize(MessageSynchro m) {
+        clock.lockClock();
+
         System.out.println(this.thread.getName() + " receives synchro message from P" + (m.getFrom()+1));
-        this.clock = Math.max(this.clock, m.getClock());
-        this.clock++;
-        //System.out.println("New clock (" + this.thread.getName()+"): " + this.clock);
+
+        clock.setClock(Math.max(clock.getClock(), m.getClock()));
+        clock.setClock(clock.getClock() + 1);
 
         // received ACK
         ack++;
-    }*/
+
+        clock.unlockClock();
+    }
+
+    // TODO broadcastSync & sendToSync
 
 
 }
