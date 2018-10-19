@@ -86,7 +86,7 @@ public class Process  implements Runnable {
     {
         this.clock++;
         //System.out.println(this.thread.getName() + " clock : " + this.clock);
-        AbstractMessage m1 = new BroadcastMessage(o,this.clock, Thread.currentThread().getName());
+        AbstractMessage m1 = new BroadcastMessage(o,this.clock, this.thread.getName());
         System.out.println(this.thread.getName() + " send in broadcast: " + m1.getPayload()+ ", with clock at " + this.clock);
         bus.postEvent(m1);
     }
@@ -132,7 +132,7 @@ public class Process  implements Runnable {
 
     public void synchronize() {
         // check receptions
-        ack = 0;
+
 
         this.clock++;
         System.out.println(this.thread.getName() + " sends synchronization, with clock at " + this.clock);
@@ -149,7 +149,9 @@ public class Process  implements Runnable {
             }
         }
 
+
         System.out.println("[" + this.id + "] Every ACK received, with clock=" + this.getClock());
+        ack -= Process.nbProcess;
     }
 
     @Subscribe
@@ -196,14 +198,11 @@ public class Process  implements Runnable {
                 int max = 0;
                 for(int i = 0; i< broadcastData.size()-1 ;i++)
                 {
-                    if((int)broadcastData.get(i) > (int)broadcastData.get(i+1))
+                    if((int)broadcastData.get(i) > max)
                     {
                         max = (int)broadcastData.get(i);
                     }
-                    else
-                    {
-                        max = (int)broadcastData.get(i+1);
-                    }
+
                     System.out.println("Max " + max);
                 }
 
