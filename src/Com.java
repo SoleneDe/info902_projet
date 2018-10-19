@@ -1,5 +1,6 @@
 import com.google.common.eventbus.Subscribe;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -11,6 +12,11 @@ public class Com {
     private Queue<Object> mails;
     private Lamport clock;
 
+
+
+    private static int nbProcess = 0;
+
+
     public Com(Lamport clock)
     {
         this.bus = EventBusService.getInstance();
@@ -18,6 +24,7 @@ public class Com {
         this.clock = clock;
         mails = new LinkedList<>();
     }
+
 
     /**
      * Take next mail, and remove it
@@ -27,6 +34,46 @@ public class Com {
     {
         return mails.remove();
     }
+
+
+
+    /**
+     * Give a id from a precess demand
+     * @return (int) process id
+     */
+    public int askId(){
+
+        return Com.nbProcess++;
+    }
+
+    /**
+     * Subscribe the process into the bus
+     * @param p process to subscribe
+     */
+    public void askSubscribe(Process p)
+    {
+        this.bus.registerSubscriber(p);
+    }
+
+    /**
+     * Unsubscribe the process from the bus
+     * @param p process to unsubscribe
+     */
+    public void askUnsubscribe(Process p)
+    {
+        this.bus.unRegisterSubscriber(p);
+    }
+
+    public void sendHeartbit()
+    {
+
+    }
+
+    public void onHeartbit(HeartbitMessage hbm)
+    {
+
+    }
+
 
     /*@Subscribe
     public void onToken(Token t){
