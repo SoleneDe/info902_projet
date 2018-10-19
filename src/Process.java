@@ -11,11 +11,9 @@ public class Process  implements Runnable, Lamport {
     private Thread thread;
     private boolean alive;
     private boolean dead;
-    private static int nbProcess = 0;
-    private int id = Process.nbProcess++;
     private int clock = 0;
-    private ArrayList<Object> broadcastData = new ArrayList<>();
-    private Com com;
+    private Com com = new Com(this);
+    private int id;
 
     public Process(String name){
 
@@ -25,17 +23,19 @@ public class Process  implements Runnable, Lamport {
         this.dead = false;
         this.thread.start();
 
+        this.id = com.askId();
+        com.askSubscribe(this);
     }
 
     public void run(){
 
         System.out.println(this.thread.getName() + " id: " + this.id);
 
-        if(this.id == Process.nbProcess-1){
+      /*  if(this.id == Process.nbProcess-1){
             Token t = new Token(this.id);
             bus.postEvent(t);
             System.out.println("Token thrown");
-        }
+        }*/
 
         while(this.alive){
             try{
@@ -101,8 +101,7 @@ public class Process  implements Runnable, Lamport {
         }
 
         // liberation du bus
-        this.bus.unRegisterSubscriber(this);
-        this.bus = null;
+        com.askUnsubscribe(this);
         System.out.println(this.thread.getName() + " stopped");
         this.dead = true;
     }
