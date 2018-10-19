@@ -7,22 +7,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 
-public class Process  implements Runnable {
+public class Process  implements Runnable, Lamport {
     private Thread thread;
-    private EventBusService bus;
     private boolean alive;
     private boolean dead;
-    private int clock = 0;
-    private String stateToken = "null";
     private static int nbProcess = 0;
     private int id = Process.nbProcess++;
-    private int ack = 0;
+    private int clock = 0;
     private ArrayList<Object> broadcastData = new ArrayList<>();
+    private Com com;
 
     public Process(String name){
 
-        this.bus = EventBusService.getInstance();
-        this.bus.registerSubscriber(this); // Auto enregistrement sur le bus afin que les methodes "@Subscribe" soient invoquees automatiquement.
         this.thread = new Thread(this);
         this.thread.setName(name);
         this.alive = true;
@@ -30,141 +26,6 @@ public class Process  implements Runnable {
         this.thread.start();
 
     }
-
-    @Subscribe
-    public void onToken(Token t){
-
-        if (t.getPayload().equals(this.id)) {
-
-            if (stateToken.equals("request")) {
-                stateToken = "sc";
-                System.out.println(this.thread.getName() + " get critical section token");
-
-                while (stateToken.equals("sc")) {
-                    try {
-                        Thread.sleep(50);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-                t.setPayload((this.id + 1) % Process.nbProcess);
-                if ( !this.dead ) {
-                    bus.postEvent(t);
-                }
-                stateToken = "null";
-
-            }else{
-
-                t.setPayload((this.id + 1) % Process.nbProcess);
-                if ( !this.dead ) {
-                    bus.postEvent(t);
-                }
-            }
-        }
-
-    }
-
-    public void request(){
-        stateToken = "request";
-
-        while(!stateToken.equals("sc")){
-            try{
-                Thread.sleep(50);
-            }catch(Exception e){
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public void release(){
-        stateToken = "release";
-    }
-
-
-
-    public void broadcast(Object o)
-    {
-        this.clock++;
-        //System.out.println(this.thread.getName() + " clock : " + this.clock);
-        AbstractMessage m1 = new BroadcastMessage(o,this.clock, this.thread.getName());
-        System.out.println(this.thread.getName() + " send in broadcast: " + m1.getPayload()+ ", with clock at " + this.clock);
-        bus.postEvent(m1);
-    }
-
-    // Declaration de la methode de callback invoquee lorsqu'un message de type AbstractMessage transite sur le bus
-    @Subscribe
-    public void onBroadcast(BroadcastMessage m){
-        //receive
-        if(!m.getSender().equals(this.thread.getName())){
-            System.out.println(this.thread.getName() + " receives in broadcast: " + m.getPayload());
-            broadcastData.add(m.getPayload());
-            if(m.getClock() > this.clock)
-            {
-                this.clock = m.getClock()+1;
-            }
-            else
-            {
-                this.clock++;
-            }
-        }
-
-    }
-
-
-    public void sendTo(Object o, int to) {
-        this.clock++;
-        System.out.println(this.thread.getName() + " send [" + o + "] to [ P" + to+1 + "], with clock at " + this.clock);
-        MessageTo m = new MessageTo(o, this.clock, to);
-        bus.postEvent(m);
-    }
-
-    @Subscribe
-    public void onReceive(MessageTo m) {
-        if (this.id == m.getIdDest()) { // the current process is the destination
-            System.out.println(this.thread.getName() + " receives in one to one: " + m.getPayload());
-            this.clock = Math.max(this.clock, m.getClock());
-            this.clock++;
-
-            //System.out.println("New clock (" + this.thread.getName() + "): " + this.clock);
-
-        }
-    }
-
-    public void synchronize() {
-        // check receptions
-
-
-        this.clock++;
-        System.out.println(this.thread.getName() + " sends synchronization, with clock at " + this.clock);
-        MessageSynchro m = new MessageSynchro(this.clock, this.id);
-        bus.postEvent(m);
-
-        // block until everyone sends an ack
-        while(ack < Process.nbProcess)
-        {
-            try{
-                Thread.sleep(100);
-            }catch(Exception e){
-                e.printStackTrace();
-            }
-        }
-
-
-        System.out.println("[" + this.id + "] Every ACK received, with clock=" + this.getClock());
-        ack -= Process.nbProcess;
-    }
-
-    @Subscribe
-    public void onSynchronize(MessageSynchro m) {
-        System.out.println(this.thread.getName() + " receives synchro message from P" + (m.getFrom()+1));
-        this.clock = Math.max(this.clock, m.getClock());
-        this.clock++;
-        //System.out.println("New clock (" + this.thread.getName()+"): " + this.clock);
-
-        // received ACK
-        ack++;
-    }
-
 
     public void run(){
 
@@ -184,7 +45,7 @@ public class Process  implements Runnable {
                 – Celui qui a tiré la plus grande valeur demande une section critique pour écrire son numéro dans un fichier
                 – Tous les Process se synchronisent avant de relancer le dé.*/
 
-                broadcastData.clear();
+                /*broadcastData.clear();
                 Thread.sleep(500);
                 int die = throwDie(6);
                 System.out.println(this.thread.getName() + " : " + die);
@@ -231,7 +92,7 @@ public class Process  implements Runnable {
                     release();
                 }
 
-                synchronize();
+                synchronize();*/
 
             }catch(Exception e){
 
@@ -259,12 +120,30 @@ public class Process  implements Runnable {
         this.alive = false;
     }
 
+    public int throwDie(int n)
+    {
+        return (int)(Math.random() * n + 1);
+    }
+
+    @Override
     public int getClock() {
         return clock;
     }
 
-    public int throwDie(int n)
-    {
-        return (int)(Math.random() * n + 1);
+    @Override
+    public void setClock(int clock) {
+        this.clock = clock;
+    }
+
+    @Override
+    public void lockClock() {
+        com.request();
+        // TODO
+    }
+
+    @Override
+    public void unlockClock() {
+        com.release();
+        // TODO
     }
 }
