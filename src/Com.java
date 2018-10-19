@@ -19,12 +19,16 @@ public class Com {
         mails = new LinkedList<>();
     }
 
+    /**
+     * Take next mail, and remove it
+     * @return mail
+     */
     public Object readNextMail()
     {
         return mails.remove();
     }
 
-    @Subscribe
+    /*@Subscribe
     public void onToken(Token t){
 
         if (t.getPayload().equals(this.id)) {
@@ -71,8 +75,12 @@ public class Com {
 
     public void release(){
         stateToken = "release";
-    }
+    }*/
 
+    /**
+     * Send object to every other process' mailbox
+     * @param o data to send
+     */
     public void broadcast(Object o)
     {
         clock.lockClock();
@@ -86,6 +94,10 @@ public class Com {
         clock.unlockClock();
     }
 
+    /**
+     * Receive a message from a broadcast, added as mail
+     * @param m message to search for in the bus
+     */
     // Declaration de la methode de callback invoquee lorsqu'un message de type AbstractMessage transite sur le bus
     @Subscribe
     public void onBroadcast(BroadcastMessage m){
@@ -103,6 +115,11 @@ public class Com {
         }
     }
 
+    /**
+     * Send an object to a specific process
+     * @param o data to be sent
+     * @param to id of the destination
+     */
     public void sendTo(Object o, int to) {
         clock.lockClock();
         clock.setClock(clock.getClock() + 1);
@@ -115,6 +132,10 @@ public class Com {
         clock.unlockClock();
     }
 
+    /**
+     * Receive a message from a one-to-one communication, added as mail
+     * @param m message to search for in the bus
+     */
     @Subscribe
     public void onReceive(MessageTo m) {
         if (this.id == m.getIdDest()) { // the current process is the destination
@@ -130,6 +151,9 @@ public class Com {
         }
     }
 
+    /**
+     * Send a sync message and wait for every other process to send one
+     */
     public void synchronize() {
         // check receptions
         clock.lockClock();
@@ -155,6 +179,10 @@ public class Com {
         clock.unlockClock();
     }
 
+    /**
+     * Receive messages to synchronize all processes
+     * @param m message to search for in the bus
+     */
     @Subscribe
     public void onSynchronize(MessageSynchro m) {
         clock.lockClock();
