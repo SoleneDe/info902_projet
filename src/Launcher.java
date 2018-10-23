@@ -9,7 +9,7 @@ public class Launcher {
 
 
         try{
-            Thread.sleep(3000);
+            Thread.sleep(1000);
         }catch(Exception e){
             e.printStackTrace();
         }

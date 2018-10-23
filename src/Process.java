@@ -1,10 +1,3 @@
-import com.google.common.eventbus.Subscribe;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 
 public class Process  implements Runnable, Lamport {
@@ -24,8 +17,11 @@ public class Process  implements Runnable, Lamport {
         this.thread.start();
 
         this.id = com.askId();
-        com.askSubscribe(this);
+        com.askSubscribe();
     }
+
+
+
 
     public void run(){
 
@@ -39,6 +35,9 @@ public class Process  implements Runnable, Lamport {
 
         while(this.alive){
             try{
+
+                com.sendHeartbit(this.alive);
+
                 /*– Attend quelques secondes que tous les autres soient lancés
                 – Lance un dé n faces (n est laissé à votre choix)
                 – Diffuse le résultat
@@ -101,9 +100,11 @@ public class Process  implements Runnable, Lamport {
         }
 
         // liberation du bus
-        com.askUnsubscribe(this);
-        System.out.println(this.thread.getName() + " stopped");
+        com.askUnsubscribe();
         this.dead = true;
+        com.sendHeartbit(this.alive);
+        System.out.println(this.getId() + " is dead");
+
     }
 
     public void waitStopped(){
@@ -144,5 +145,13 @@ public class Process  implements Runnable, Lamport {
     public void unlockClock() {
         com.release();
         // TODO
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public Thread getThread() {
+        return thread;
     }
 }

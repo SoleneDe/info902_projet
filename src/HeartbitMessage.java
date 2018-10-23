@@ -9,6 +9,7 @@ public class HeartbitMessage {
         this.id = id;
     }
 
+
     public boolean isAlive() {
         return isAlive;
     }

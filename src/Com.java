@@ -1,8 +1,6 @@
 import com.google.common.eventbus.Subscribe;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 public class Com {
 
@@ -10,18 +8,20 @@ public class Com {
     private String stateToken = "null";
     private int ack = 0;
     private Queue<Object> mails;
-    private Lamport clock;
+    //Process
+    private Process p;
+    private HashMap<Integer,Boolean> neighboors = new HashMap<>();
 
 
 
     private static int nbProcess = 0;
 
 
-    public Com(Lamport clock)
+    public Com(Lamport p)
     {
         this.bus = EventBusService.getInstance();
         this.bus.registerSubscriber(this); // Auto enregistrement sur le bus afin que les methodes "@Subscribe" soient invoquees automatiquement.
-        this.clock = clock;
+        this.p = (Process)p;
         mails = new LinkedList<>();
     }
 
@@ -48,37 +48,50 @@ public class Com {
 
     /**
      * Subscribe the process into the bus
-     * @param p process to subscribe
      */
-    public void askSubscribe(Process p)
+    public void askSubscribe()
     {
         this.bus.registerSubscriber(p);
     }
 
     /**
      * Unsubscribe the process from the bus
-     * @param p process to unsubscribe
      */
-    public void askUnsubscribe(Process p)
+    public void askUnsubscribe()
     {
         this.bus.unRegisterSubscriber(p);
     }
 
-    public void sendHeartbit()
+    public void sendHeartbit(boolean isAlive)
     {
+
+        HeartbitMessage m = new HeartbitMessage(isAlive,p.getId());
+        //System.out.println(p.getThread().getName() +" : Send heartbit: " + m.isAlive());
+
+        bus.postEvent(m);
 
     }
 
-    public void onHeartbit(HeartbitMessage hbm)
+    @Subscribe
+    public void onHeartbit(HeartbitMessage m)
     {
+        if(m.getId() != p.getId()){
+
+
+            //System.out.println(p.getThread().getName() +" : Receives heartbit from : " + m.getId() + " isAlive : " + m.isAlive());
+            neighboors.put(m.getId(),m.isAlive());
+            System.out.println(p.getThread().getName() + " : " +Arrays.asList(neighboors));
+
+
+        }
 
     }
 
 
-    /*@Subscribe
+    @Subscribe
     public void onToken(Token t){
 
-        if (t.getPayload().equals(this.id)) {
+        /*if (t.getPayload().equals(this.id)) {
 
             if (stateToken.equals("request")) {
                 stateToken = "sc";
@@ -104,12 +117,12 @@ public class Com {
                     bus.postEvent(t);
                 }
             }
-        }
+        }*/
 
     }
 
     public void request(){
-        stateToken = "request";
+        /*stateToken = "request";
 
         while(!stateToken.equals("sc")){
             try{
@@ -117,12 +130,12 @@ public class Com {
             }catch(Exception e){
                 e.printStackTrace();
             }
-        }
+        }*/
     }
 
     public void release(){
-        stateToken = "release";
-    }*/
+        //stateToken = "release";
+    }
 
     /**
      * Send object to every other process' mailbox
@@ -130,7 +143,7 @@ public class Com {
      */
     public void broadcast(Object o)
     {
-        clock.lockClock();
+        /*clock.lockClock();
         clock.setClock(clock.getClock() + 1);
 
         AbstractMessage m = new BroadcastMessage(o, clock.getClock(), this.thread.getName());
@@ -138,7 +151,7 @@ public class Com {
 
         bus.postEvent(m);
 
-        clock.unlockClock();
+        clock.unlockClock();*/
     }
 
     /**
@@ -149,7 +162,7 @@ public class Com {
     @Subscribe
     public void onBroadcast(BroadcastMessage m){
         //receive
-        if(!m.getSender().equals(this.thread.getName())){
+        /*if(!m.getSender().equals(this.thread.getName())){
             clock.lockClock();
 
             System.out.println("Receives in broadcast: " + m.getPayload());
@@ -159,7 +172,7 @@ public class Com {
             clock.setClock(clock.getClock() + 1);
 
             clock.unlockClock();
-        }
+        }*/
     }
 
     /**
@@ -168,7 +181,7 @@ public class Com {
      * @param to id of the destination
      */
     public void sendTo(Object o, int to) {
-        clock.lockClock();
+        /*clock.lockClock();
         clock.setClock(clock.getClock() + 1);
 
         System.out.println(this.thread.getName() + " send [" + o + "] to [ P" + to+1 + "], with clock at " + clock.getClock());
@@ -176,7 +189,7 @@ public class Com {
 
         bus.postEvent(m);
 
-        clock.unlockClock();
+        clock.unlockClock();*/
     }
 
     /**
@@ -185,7 +198,7 @@ public class Com {
      */
     @Subscribe
     public void onReceive(MessageTo m) {
-        if (this.id == m.getIdDest()) { // the current process is the destination
+       /* if (this.id == m.getIdDest()) { // the current process is the destination
             clock.lockClock();
 
             System.out.println(this.thread.getName() + " receives in one to one: " + m.getPayload());
@@ -195,7 +208,7 @@ public class Com {
             clock.setClock(clock.getClock() + 1);
 
             clock.unlockClock();
-        }
+        }*/
     }
 
     /**
@@ -203,7 +216,7 @@ public class Com {
      */
     public void synchronize() {
         // check receptions
-        clock.lockClock();
+        /*clock.lockClock();
         clock.setClock(clock.getClock() + 1);
 
         System.out.println(this.thread.getName() + " sends synchronization, with clock at " + clock.getClock());
@@ -223,7 +236,7 @@ public class Com {
         System.out.println("[" + this.id + "] Every ACK received, with clock=" + clock.getClock());
         ack -= Process.nbProcess;
 
-        clock.unlockClock();
+        clock.unlockClock();*/
     }
 
     /**
@@ -232,7 +245,7 @@ public class Com {
      */
     @Subscribe
     public void onSynchronize(MessageSynchro m) {
-        clock.lockClock();
+        /*clock.lockClock();
 
         System.out.println(this.thread.getName() + " receives synchro message from P" + (m.getFrom()+1));
 
@@ -242,7 +255,7 @@ public class Com {
         // received ACK
         ack++;
 
-        clock.unlockClock();
+        clock.unlockClock();*/
     }
 
     // TODO broadcastSync & sendToSync
