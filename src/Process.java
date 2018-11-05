@@ -6,7 +6,6 @@ public class Process  implements Runnable, Lamport {
     private boolean dead;
     private int clock = 0;
     private Com com = new Com(this);
-    private int id;
 
     public Process(String name){
 
@@ -15,17 +14,11 @@ public class Process  implements Runnable, Lamport {
         this.alive = true;
         this.dead = false;
         this.thread.start();
-
-        this.id = com.askId();
-        com.askSubscribe();
     }
-
-
-
 
     public void run(){
 
-        System.out.println(this.thread.getName() + " id: " + this.id);
+        System.out.println(this.thread.getName() + " id: " + this.com.getId());
 
       /*  if(this.id == Process.nbProcess-1){
             Token t = new Token(this.id);
@@ -35,8 +28,13 @@ public class Process  implements Runnable, Lamport {
 
         while(this.alive){
             try{
-
-                com.sendHeartbit(this.alive);
+                //com.sendHeartbit(this.alive);
+                com.synchronize();
+                try{
+                    Thread.sleep(500);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
 
                 /*– Attend quelques secondes que tous les autres soient lancés
                 – Lance un dé n faces (n est laissé à votre choix)
@@ -99,11 +97,10 @@ public class Process  implements Runnable, Lamport {
             }
         }
 
-        // liberation du bus
-        com.askUnsubscribe();
+        this.com.unregister();
         this.dead = true;
-        com.sendHeartbit(this.alive);
-        System.out.println(this.getId() + " is dead");
+        //com.sendHeartbit(this.alive);
+        System.out.println(this.com.getId() + " is dead");
 
     }
 
@@ -145,10 +142,6 @@ public class Process  implements Runnable, Lamport {
     public void unlockClock() {
         com.release();
         // TODO
-    }
-
-    public int getId() {
-        return id;
     }
 
     public Thread getThread() {

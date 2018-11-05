@@ -1,15 +1,14 @@
 public class BroadcastMessage extends AbstractMessage {
 
+    protected int sender;
 
-    protected String sender;
-
-    public BroadcastMessage(Object payload, int clock, String sender) {
+    public BroadcastMessage(Object payload, int clock, int sender) {
 
         super(payload, clock);
         this.sender = sender;
     }
 
-    public String getSender() {
+    public int getSender() {
         return sender;
     }
 

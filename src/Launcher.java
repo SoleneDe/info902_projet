@@ -9,7 +9,7 @@ public class Launcher {
 
 
         try{
-            Thread.sleep(1000);
+            Thread.sleep(2000);
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -18,12 +18,9 @@ public class Launcher {
         p2.stop();
         p3.stop();
 
-
         p1.waitStopped();
         p2.waitStopped();
         p3.waitStopped();
-
-
 
         System.out.println("Final clocks: " + p1.getClock() + ", " + p2.getClock() + ", " + p3.getClock());
 
