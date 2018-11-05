@@ -2,6 +2,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.concurrent.Semaphore;
 
 public class Process  implements Runnable, Lamport {
@@ -61,16 +62,7 @@ public class Process  implements Runnable, Lamport {
 
                 com.synchronize();
 
-                int max = 0;
-                for(int i = 0; i< broadcastData.size()-1 ;i++)
-                {
-                    if((int)broadcastData.get(i) > max)
-                    {
-                        max = (int)broadcastData.get(i);
-                    }
-
-                    System.out.println("Max " + max);
-                }
+                int max = broadcastData.stream().max(Comparator.comparing(Integer::valueOf)).get();
 
                 if(max == die) {
 
