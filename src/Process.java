@@ -1,3 +1,7 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 
 public class Process  implements Runnable, Lamport {
@@ -8,6 +12,8 @@ public class Process  implements Runnable, Lamport {
     private Semaphore semaphore;
     private Com com;
 
+    private ArrayList<Integer> broadcastData;
+
     public Process(String name){
 
         this.thread = new Thread(this);
@@ -16,6 +22,7 @@ public class Process  implements Runnable, Lamport {
         this.dead = false;
         this.semaphore = new Semaphore(1);
         this.com = new Com(this);
+        this.broadcastData = new ArrayList<>();
         this.thread.start();
     }
 
@@ -27,36 +34,32 @@ public class Process  implements Runnable, Lamport {
 
         while(this.alive){
             try{
-                //com.sendHeartbit(this.alive);
-
-               /* if (com.getId() == 0)
-                {
-                    com.broadcast("HELLO");
-                }*/
-
-                com.synchronize();
-                try{
-                    Thread.sleep(500);
-                }catch(Exception e){
-                    e.printStackTrace();
-                }
-
                 /*– Attend quelques secondes que tous les autres soient lancés
                 – Lance un dé n faces (n est laissé à votre choix)
                 – Diffuse le résultat
                 – Celui qui a tiré la plus grande valeur demande une section critique pour écrire son numéro dans un fichier
                 – Tous les Process se synchronisent avant de relancer le dé.*/
 
-                /*broadcastData.clear();
+                broadcastData.clear();
                 Thread.sleep(500);
                 int die = throwDie(6);
                 System.out.println(this.thread.getName() + " : " + die);
                 broadcastData.add(die);
-                broadcast(die);
+                com.broadcast(die);
 
-                System.out.println(broadcastData);
+                while(com.checkMailBoxSize() < com.getNbProcess()-1)
+                {
+                    Thread.sleep(50);
+                }
 
-                synchronize();
+                for (int i=0; i<com.getNbProcess()-1; i++)
+                {
+                    broadcastData.add((int)com.readNextMail());
+                }
+
+                System.out.println(com.getId() + " " + broadcastData);
+
+                com.synchronize();
 
                 int max = 0;
                 for(int i = 0; i< broadcastData.size()-1 ;i++)
@@ -69,13 +72,11 @@ public class Process  implements Runnable, Lamport {
                     System.out.println("Max " + max);
                 }
 
-                System.out.println(broadcastData);
-
                 if(max == die) {
 
-                    System.out.println(this.thread.getName() + " : J'ai gagné");
+                    System.out.println(this.thread.getName() + " : J'ai gagné (" + die + ")");
 
-                    request();
+                    com.request();
 
                     // écrire dans fichier
                     String result = die + " \n";
@@ -91,10 +92,10 @@ public class Process  implements Runnable, Lamport {
                     bw.close();
                     fw.close();
 
-                    release();
+                    com.release();
                 }
 
-                synchronize();*/
+                com.synchronize();
 
             }catch(Exception e){
 

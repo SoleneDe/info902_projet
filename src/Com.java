@@ -44,6 +44,15 @@ public class Com {
     }
 
     /**
+     * Returns the size of the map mails, representing the mailbox
+     * @return The size of mails
+     */
+    public int checkMailBoxSize()
+    {
+        return mails.size();
+    }
+
+    /**
      * Give a id from a process demands
      * @return (int) process id
      */
@@ -86,6 +95,10 @@ public class Com {
         }
     }
 
+    public int getNbProcess()
+    {
+        return Com.nbProcess;
+    }
 
     @Subscribe
     public void onToken(Token t){
@@ -157,7 +170,7 @@ public class Com {
         p.setClock(p.getClock() + 1);
 
         BroadcastMessage m = new BroadcastMessage(o, p.getClock(), this.id);
-        //System.out.println(this.id + " broadcasts: " + m.getPayload()+ ", with clock at " + p.getClock());
+        System.out.println(this.id + " broadcasts: " + m.getPayload()+ ", with clock at " + p.getClock());
 
         bus.postEvent(m);
 
@@ -175,7 +188,7 @@ public class Com {
         if(m.getSender() != this.id){
             p.lockClock();
 
-            //System.out.println(this.id + " receives in broadcast: " + m.getPayload());
+            System.out.println(this.id + " receives in broadcast: " + m.getPayload());
             mails.add(m.getPayload());
 
             p.setClock(Math.max(p.getClock(), m.getClock()));
@@ -194,7 +207,7 @@ public class Com {
         p.lockClock();
         p.setClock(p.getClock() + 1);
 
-        System.out.println(this.id + " send [" + o + "] to [" + to + "], with clock at " + p.getClock());
+        //System.out.println(this.id + " send [" + o + "] to [" + to + "], with clock at " + p.getClock());
         MessageTo m = new MessageTo(o, p.getClock(), to);
 
         bus.postEvent(m);
@@ -211,7 +224,7 @@ public class Com {
         if (this.id == m.getIdDest()) { // the current process is the destination
             p.lockClock();
 
-            System.out.println(this.id + " receives in one to one: " + m.getPayload());
+            //System.out.println(this.id + " receives in one to one: " + m.getPayload());
             mails.add(m.getPayload());
 
             p.setClock(Math.max(p.getClock(), m.getClock()));
@@ -229,7 +242,7 @@ public class Com {
         p.lockClock();
         p.setClock(p.getClock() + 1);
 
-        System.out.println(this.id + " sends synchronization, with clock at " + p.getClock());
+        //System.out.println(this.id + " sends synchronization, with clock at " + p.getClock());
         MessageSynchro m = new MessageSynchro(p.getClock(), this.id);
         p.unlockClock();
 
@@ -257,7 +270,7 @@ public class Com {
 
         if (m.getFrom() != this.id) {
 
-            System.out.println(this.id + " receives synchro message from " + m.getFrom());
+            //System.out.println(this.id + " receives synchro message from " + m.getFrom());
 
             p.lockClock();
             p.setClock(Math.max(p.getClock(), m.getClock()));
