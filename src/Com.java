@@ -90,12 +90,12 @@ public class Com {
     @Subscribe
     public void onToken(Token t){
 
-        /*if (t.getPayload().equals(this.id)) {
+        if (t.getPayload().equals(this.id)) {
 
             if (stateToken.equals("request")) {
                 stateToken = "sc";
-                System.out.println(this.thread.getName() + " get critical section token");
 
+                System.out.println(this.id + " get critical section token");
                 while (stateToken.equals("sc")) {
                     try {
                         Thread.sleep(50);
@@ -103,25 +103,25 @@ public class Com {
                         e.printStackTrace();
                     }
                 }
-                t.setPayload((this.id + 1) % Process.nbProcess);
-                if ( !this.dead ) {
+                t.setPayload((this.id + 1) % Com.nbProcess);
+                //if ( !this.dead ) {
                     bus.postEvent(t);
-                }
+                //}
                 stateToken = "null";
 
             }else{
 
-                t.setPayload((this.id + 1) % Process.nbProcess);
-                if ( !this.dead ) {
+                t.setPayload((this.id + 1) % Com.nbProcess);
+                //if ( !this.dead ) {
                     bus.postEvent(t);
-                }
+                //}
             }
-        }*/
+        }
 
     }
 
     public void request(){
-        /*stateToken = "request";
+        stateToken = "request";
 
         while(!stateToken.equals("sc")){
             try{
@@ -129,11 +129,22 @@ public class Com {
             }catch(Exception e){
                 e.printStackTrace();
             }
-        }*/
+        }
     }
 
     public void release(){
-        //stateToken = "release";
+        stateToken = "release";
+
+        System.out.println(this.id + " releases sc");
+    }
+
+    public void startToken()
+    {
+        if(this.id == Com.nbProcess-1){
+            Token t = new Token(this.id);
+            bus.postEvent(t);
+            System.out.println("Token thrown");
+        }
     }
 
     /**
@@ -142,7 +153,7 @@ public class Com {
      */
     public void broadcast(Object o)
     {
-        //p.lockClock();
+        p.lockClock();
         p.setClock(p.getClock() + 1);
 
         BroadcastMessage m = new BroadcastMessage(o, p.getClock(), this.id);
@@ -150,7 +161,7 @@ public class Com {
 
         bus.postEvent(m);
 
-        //p.unlockClock();
+        p.unlockClock();
     }
 
     /**
@@ -162,7 +173,7 @@ public class Com {
     public void onBroadcast(BroadcastMessage m){
         //receive
         if(m.getSender() != this.id){
-            //p.lockClock();
+            p.lockClock();
 
             //System.out.println(this.id + " receives in broadcast: " + m.getPayload());
             mails.add(m.getPayload());
@@ -170,7 +181,7 @@ public class Com {
             p.setClock(Math.max(p.getClock(), m.getClock()));
             p.setClock(p.getClock() + 1);
 
-            //p.unlockClock();
+            p.unlockClock();
         }
     }
 
@@ -180,15 +191,15 @@ public class Com {
      * @param to id of the destination
      */
     public void sendTo(Object o, int to) {
-        //p.lockClock();
+        p.lockClock();
         p.setClock(p.getClock() + 1);
 
-        //System.out.println(this.id + " send [" + o + "] to [" + to + "], with clock at " + p.getClock());
+        System.out.println(this.id + " send [" + o + "] to [" + to + "], with clock at " + p.getClock());
         MessageTo m = new MessageTo(o, p.getClock(), to);
 
         bus.postEvent(m);
 
-        //p.unlockClock();
+        p.unlockClock();
     }
 
     /**
@@ -198,15 +209,15 @@ public class Com {
     @Subscribe
     public void onReceive(MessageTo m) {
         if (this.id == m.getIdDest()) { // the current process is the destination
-            //p.lockClock();
+            p.lockClock();
 
-            //System.out.println(this.id + " receives in one to one: " + m.getPayload());
+            System.out.println(this.id + " receives in one to one: " + m.getPayload());
             mails.add(m.getPayload());
 
             p.setClock(Math.max(p.getClock(), m.getClock()));
             p.setClock(p.getClock() + 1);
 
-            //p.unlockClock();
+            p.unlockClock();
         }
     }
 
@@ -215,11 +226,12 @@ public class Com {
      */
     public void synchronize() {
         // check receptions
-        //p.lockClock();
+        p.lockClock();
         p.setClock(p.getClock() + 1);
 
         System.out.println(this.id + " sends synchronization, with clock at " + p.getClock());
         MessageSynchro m = new MessageSynchro(p.getClock(), this.id);
+        p.unlockClock();
 
         bus.postEvent(m);
 
@@ -233,11 +245,7 @@ public class Com {
             }
         }
         System.out.println("[" + this.id + "] Every ACK received, with clock=" + p.getClock());
-        System.out.println("1 " + ack);
         ack -= Com.nbProcess-1;
-        System.out.println("2 " + ack);
-
-        //p.unlockClock();
     }
 
     /**
@@ -247,14 +255,14 @@ public class Com {
     @Subscribe
     public void onSynchronize(MessageSynchro m) {
 
-        //p.unlockClock();
         if (m.getFrom() != this.id) {
-            //p.lockClock();
 
             System.out.println(this.id + " receives synchro message from " + m.getFrom());
 
+            p.lockClock();
             p.setClock(Math.max(p.getClock(), m.getClock()));
             p.setClock(p.getClock() + 1);
+            p.unlockClock();
 
             // received ACK
             ack++;

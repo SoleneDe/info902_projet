@@ -20,15 +20,17 @@ public class Process  implements Runnable, Lamport {
 
         System.out.println(this.thread.getName() + " id: " + this.com.getId());
 
-      /*  if(this.id == Process.nbProcess-1){
-            Token t = new Token(this.id);
-            bus.postEvent(t);
-            System.out.println("Token thrown");
-        }*/
+        com.startToken();
 
         while(this.alive){
             try{
                 //com.sendHeartbit(this.alive);
+
+               /* if (com.getId() == 0)
+                {
+                    com.broadcast("HELLO");
+                }*/
+
                 com.synchronize();
                 try{
                     Thread.sleep(500);
@@ -135,13 +137,11 @@ public class Process  implements Runnable, Lamport {
     @Override
     public void lockClock() {
         com.request();
-        // TODO
     }
 
     @Override
     public void unlockClock() {
         com.release();
-        // TODO
     }
 
     public Thread getThread() {
