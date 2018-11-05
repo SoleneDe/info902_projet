@@ -1,11 +1,12 @@
-
+import java.util.concurrent.Semaphore;
 
 public class Process  implements Runnable, Lamport {
     private Thread thread;
     private boolean alive;
     private boolean dead;
     private int clock = 0;
-    private Com com = new Com(this);
+    private Semaphore semaphore;
+    private Com com;
 
     public Process(String name){
 
@@ -13,6 +14,8 @@ public class Process  implements Runnable, Lamport {
         this.thread.setName(name);
         this.alive = true;
         this.dead = false;
+        this.semaphore = new Semaphore(1);
+        this.com = new Com(this);
         this.thread.start();
     }
 
@@ -136,12 +139,16 @@ public class Process  implements Runnable, Lamport {
 
     @Override
     public void lockClock() {
-        com.request();
+        try {
+            semaphore.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void unlockClock() {
-        com.release();
+        semaphore.release();
     }
 
     public Thread getThread() {
