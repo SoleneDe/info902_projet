@@ -41,33 +41,39 @@ public class Process  implements Runnable, Lamport {
                 – Celui qui a tiré la plus grande valeur demande une section critique pour écrire son numéro dans un fichier
                 – Tous les Process se synchronisent avant de relancer le dé.*/
 
+                // nouveau lancé de dé
                 broadcastData.clear();
                 Thread.sleep(500);
-                int die = throwDie(6);
+                int die = throwDie(6); // dé à 6 faces
                 System.out.println(this.thread.getName() + " : " + die);
                 broadcastData.add(die);
+                // diffusion du résultat aux autres processus
                 com.broadcast(die);
 
+                // chaque processus attend de tout recevoir
                 while(com.checkMailBoxSize() < com.getNbProcess()-1)
                 {
                     Thread.sleep(50);
                 }
 
+                // récupère tous les résultats de dés reçus
                 for (int i=0; i<com.getNbProcess()-1; i++)
                 {
                     broadcastData.add((int)com.readNextMail());
                 }
 
                 System.out.println(com.getId() + " " + broadcastData);
-
                 com.synchronize();
 
+                // détermine le meilleur résultat
                 int max = broadcastData.stream().max(Comparator.comparing(Integer::valueOf)).get();
 
+                // si ce processus détient le meilleur résultat
                 if(max == die) {
 
                     System.out.println(this.thread.getName() + " : J'ai gagné (" + die + ")");
 
+                    // il sera le seul à avoir accès au fichier
                     com.request();
 
                     // écrire dans fichier
@@ -79,14 +85,17 @@ public class Process  implements Runnable, Lamport {
                     FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
                     BufferedWriter bw = new BufferedWriter(fw);
 
+                    // écrit le résultat du dé à la suite du fichier
                     bw.write(result);
 
                     bw.close();
                     fw.close();
 
+                    // un autre processus pourra avoir accès au fichier
                     com.release();
                 }
 
+                // tous les processus doivent finir avant de relancer les dés
                 com.synchronize();
 
             }catch(Exception e){
@@ -95,6 +104,7 @@ public class Process  implements Runnable, Lamport {
             }
         }
 
+        // retirer du bus puisque le processus va cesser d'exister
         this.com.unregister();
         this.dead = true;
         //com.sendHeartbit(this.alive);
