@@ -48,10 +48,11 @@ public class Process  implements Runnable, Lamport {
                 broadcastData.add(die);
                 com.broadcast(die);
 
-                while(com.checkMailBoxSize() < com.getNbProcess()-1)
+                /*while(com.checkMailBoxSize() < com.getNbProcess()-1)
                 {
                     Thread.sleep(50);
-                }
+                }*/
+                com.synchronize();
 
                 for (int i=0; i<com.getNbProcess()-1; i++)
                 {
