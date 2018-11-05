@@ -12,9 +12,13 @@ public class Process  implements Runnable, Lamport {
     private int clock = 0;
     private Semaphore semaphore;
     private Com com;
-
+    // to gather the results of all the dice thrown by processes
     private ArrayList<Integer> broadcastData;
 
+    /**
+     * Constructor for a Process
+     * @param name The name of the process being created
+     */
     public Process(String name){
 
         this.thread = new Thread(this);
@@ -27,19 +31,19 @@ public class Process  implements Runnable, Lamport {
         this.thread.start();
     }
 
+    /**
+     * Example to test the different operations
+     * Processes throw dice and write the best result in a file
+     */
     public void run(){
 
         System.out.println(this.thread.getName() + " id: " + this.com.getId());
 
+        // launch the token to manage critical sections
         com.startToken();
 
         while(this.alive){
             try{
-                /*– Attend quelques secondes que tous les autres soient lancés
-                – Lance un dé n faces (n est laissé à votre choix)
-                – Diffuse le résultat
-                – Celui qui a tiré la plus grande valeur demande une section critique pour écrire son numéro dans un fichier
-                – Tous les Process se synchronisent avant de relancer le dé.*/
 
                 // nouveau lancé de dé
                 broadcastData.clear();
@@ -115,6 +119,10 @@ public class Process  implements Runnable, Lamport {
 
     }
 
+    /**
+     * active wait until the process change its 'dead' attribute to false,
+     * to avoid stopping the program before the process is stopped
+     */
     public void waitStopped(){
         while(!this.dead){
             try{
@@ -124,25 +132,45 @@ public class Process  implements Runnable, Lamport {
             }
         }
     }
+
+    /**
+     * Used to ask the process to stop executing itself after the end of the current loop
+     */
     public void stop(){
         this.alive = false;
     }
 
+    /**
+     * Simulate a die throw, by generating a random number between 1 and n included
+     * @param n The max value you can get from the die
+     * @return The result of the throw
+     */
     public int throwDie(int n)
     {
         return (int)(Math.random() * n + 1);
     }
 
+    /**
+     * Returns the value of the clock attribute
+     * @return clock
+     */
     @Override
     public int getClock() {
         return clock;
     }
 
+    /**
+     * Set the value of the clock attribute
+     * @param clock
+     */
     @Override
     public void setClock(int clock) {
         this.clock = clock;
     }
 
+    /**
+     * To be used when accessing the clock, to avoid issues with the critical section
+     */
     @Override
     public void lockClock() {
         try {
@@ -152,11 +180,18 @@ public class Process  implements Runnable, Lamport {
         }
     }
 
+    /**
+     * To be used after lockClock(), so the clock can be accessed by another
+     */
     @Override
     public void unlockClock() {
         semaphore.release();
     }
 
+    /**
+     * Returns the value of the thread attribute
+     * @return thread
+     */
     public Thread getThread() {
         return thread;
     }
