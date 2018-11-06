@@ -58,14 +58,11 @@ public class Process implements Runnable, Lamport {
                 // diffusion du résultat aux autres processus
                 com.broadcast(die);
 
-
-                /*while(com.checkMailBoxSize() < com.getNbProcess()-1)
-
+                // chaque processus attend de tout recevoir
+                while(com.checkMailBoxSize() < com.getNbProcess()-1)
                 {
                     Thread.sleep(50);
-                }*/
-                // chaque processus attend de tout recevoir
-                com.synchronize();
+                }
 
                 // récupère tous les résultats de dés reçus
                 for (int i=0; i<com.getNbProcess()-1; i++)
@@ -74,7 +71,6 @@ public class Process implements Runnable, Lamport {
                 }
 
                 System.out.println(com.getId() + " " + broadcastData);
-                com.synchronize();
 
                 // détermine le meilleur résultat
                 int max = broadcastData.stream().max(Comparator.comparing(Integer::valueOf)).get();
