@@ -2,20 +2,26 @@ import com.google.common.eventbus.Subscribe;
 
 import java.util.*;
 
+/**
+ * Class taking care of the messages in the bus
+ * A Lamport object can check its messages through the mailbox
+ */
 public class Com {
 
     private EventBusService bus;
     private String stateToken = "null";
-    private int ack = 0;
-    private Queue<Object> mails;
+    private int ack = 0; // for the synchronization barrier
+    private Queue<Object> mails; // the mailbox where messages are stored
     //Process
     private Lamport p;
-    //private HashMap<Integer,Boolean> neighbours = new HashMap<>();
     private int id;
 
     private static int nbProcess = 0;
 
-
+    /**
+     * Constructor for Com
+     * @param p The Lamport object that needs to access the bus
+     */
     public Com(Lamport p)
     {
         this.id = Com.nbProcess++;
@@ -25,6 +31,9 @@ public class Com {
         mails = new LinkedList<>();
     }
 
+    /**
+     * When attribute p stops, it should unregister itself from the bus
+     */
     public void unregister()
     {
         this.bus.unRegisterSubscriber(this);
@@ -45,7 +54,7 @@ public class Com {
 
     /**
      * Returns the size of the map mails, representing the mailbox
-     * @return The size of mails
+     * @return The number of messages in the mailbox
      */
     public int checkMailBoxSize()
     {
@@ -60,6 +69,11 @@ public class Com {
         return this.id;
     }
 
+    /**
+     * Send a signal on the bus to tell others that it's alive
+     * TODO still an early version
+     * @param isAlive Boolean to tell if it's still running or stopping
+     */
     public void sendHeartbit(boolean isAlive)
     {
         HeartbitMessage m = new HeartbitMessage(isAlive, this.id);
@@ -74,6 +88,11 @@ public class Com {
 
     }
 
+    /**
+     * Read a signal from another to tell its alive
+     * TODO still an early version
+     * @param m The message to read
+     */
     @Subscribe
     public void onHeartbit(HeartbitMessage m)
     {
@@ -88,6 +107,10 @@ public class Com {
 
     }
 
+    /**
+     * Change its own ID when another is dead
+     * @param id The ID of the entity that died
+     */
     private void changeIdAfterDeath(int id) {
         if (this.id > id)
         {
@@ -95,11 +118,20 @@ public class Com {
         }
     }
 
+    /**
+     * Returns the total number of prcesses
+     * @return nbProcess
+     */
     public int getNbProcess()
     {
         return Com.nbProcess;
     }
 
+    /**
+     * Describes how to handle the token (to deal with critical sections),
+     * depending on the attribute stateToken
+     * @param t The message to read
+     */
     @Subscribe
     public void onToken(Token t){
 
@@ -133,6 +165,10 @@ public class Com {
 
     }
 
+    /**
+     * Should be called when a critical section is starting, you get the token
+     * Don't forget to use release() afterwards
+     */
     public void request(){
         stateToken = "request";
 
@@ -145,12 +181,20 @@ public class Com {
         }
     }
 
+    /**
+     * Should be used when a critical section is ending, to give the token to the next one
+     * Use request() beforehand, to get the token
+     */
     public void release(){
         stateToken = "release";
 
         System.out.println(this.id + " releases sc");
     }
 
+    /**
+     * Should be used at the very start,
+     * the last Com created will get the token, to start the cycle
+     */
     public void startToken()
     {
         if(this.id == Com.nbProcess-1){
@@ -162,7 +206,7 @@ public class Com {
 
     /**
      * Send object to every other process' mailbox
-     * @param o data to send
+     * @param o Data to send
      */
     public void broadcast(Object o)
     {
@@ -179,9 +223,8 @@ public class Com {
 
     /**
      * Receive a message from a broadcast, added as mail
-     * @param m message to search for in the bus
+     * @param m The message to read
      */
-    // Declaration de la methode de callback invoquee lorsqu'un message de type AbstractMessage transite sur le bus
     @Subscribe
     public void onBroadcast(BroadcastMessage m){
         //receive
@@ -200,8 +243,8 @@ public class Com {
 
     /**
      * Send an object to a specific process
-     * @param o data to be sent
-     * @param to id of the destination
+     * @param o Data to be sent
+     * @param to ID of the destination
      */
     public void sendTo(Object o, int to) {
         p.lockClock();
@@ -217,7 +260,7 @@ public class Com {
 
     /**
      * Receive a message from a one-to-one communication, added as mail
-     * @param m message to search for in the bus
+     * @param m The message to read
      */
     @Subscribe
     public void onReceive(MessageTo m) {
@@ -235,7 +278,7 @@ public class Com {
     }
 
     /**
-     * Send a sync message and wait for every other process to send one
+     * Send a sync message and wait for every other process to send one before continuing
      */
     public void synchronize() {
         // check receptions
@@ -263,7 +306,7 @@ public class Com {
 
     /**
      * Receive messages to synchronize all processes
-     * @param m message to search for in the bus
+     * @param m The message to read
      */
     @Subscribe
     public void onSynchronize(MessageSynchro m) {

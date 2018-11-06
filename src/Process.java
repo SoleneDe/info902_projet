@@ -5,15 +5,17 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.concurrent.Semaphore;
 
-public class Process  implements Runnable, Lamport {
+/**
+ * Processes playing a game of dice with each other
+ * Class mostly used to test operations of Com
+ */
+public class Process implements Runnable, Lamport {
     private Thread thread;
     private boolean alive;
     private boolean dead;
     private int clock = 0;
     private Semaphore semaphore;
     private Com com;
-    // to gather the results of all the dice thrown by processes
-    private ArrayList<Integer> broadcastData;
 
     /**
      * Constructor for a Process
@@ -27,7 +29,6 @@ public class Process  implements Runnable, Lamport {
         this.dead = false;
         this.semaphore = new Semaphore(1);
         this.com = new Com(this);
-        this.broadcastData = new ArrayList<>();
         this.thread.start();
     }
 
@@ -38,6 +39,9 @@ public class Process  implements Runnable, Lamport {
     public void run(){
 
         System.out.println(this.thread.getName() + " id: " + this.com.getId());
+
+        // to gather the results of all the dice thrown by processes
+        ArrayList<Integer> broadcastData = new ArrayList<>();
 
         // launch the token to manage critical sections
         com.startToken();
