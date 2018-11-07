@@ -135,7 +135,7 @@ public class Com {
     @Subscribe
     public void onToken(Token t){
 
-        if (t.getPayload().equals(this.id)) {
+        if (t.getId() == this.id) {
 
             if (stateToken.equals("request")) {
                 stateToken = "sc";
@@ -148,7 +148,7 @@ public class Com {
                         e.printStackTrace();
                     }
                 }
-                t.setPayload((this.id + 1) % Com.nbProcess);
+                t.setId((this.id + 1) % Com.nbProcess);
                 //if ( !this.dead ) {
                     bus.postEvent(t);
                 //}
@@ -156,7 +156,7 @@ public class Com {
 
             }else{
 
-                t.setPayload((this.id + 1) % Com.nbProcess);
+                t.setId((this.id + 1) % Com.nbProcess);
                 //if ( !this.dead ) {
                     bus.postEvent(t);
                 //}
@@ -267,7 +267,7 @@ public class Com {
         if (this.id == m.getIdDest()) { // the current process is the destination
             p.lockClock();
 
-            //System.out.println(this.id + " receives in one to one: " + m.getPayload());
+            //System.out.println(this.id + " receives in one to one: " + m.getId());
             mails.add(m.getPayload());
 
             p.setClock(Math.max(p.getClock(), m.getClock()));
