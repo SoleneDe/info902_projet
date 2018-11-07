@@ -127,8 +127,8 @@ public class Process implements Runnable, Lamport {
 
 
                 // Test broadcastSync
-                /*
-                Thread.sleep(50);
+
+                /*Thread.sleep(50);
 
                 if(com.getId() == 0){
 
@@ -145,18 +145,18 @@ public class Process implements Runnable, Lamport {
                     }
 
                     System.out.println((String)com.readNextBoadcastMailSync());
-                }
-                */
+                }*/
+
 
 
                 // Test sendToSync()
-                /*
-                Thread.sleep(50);
+
+                /*Thread.sleep(50);
 
                 if(com.getId() == 0){
 
                     com.sendToSync("hello",1);
-                    System.out.println("Send done");
+
 
                 }
 
@@ -169,8 +169,8 @@ public class Process implements Runnable, Lamport {
                     }
 
                     System.out.println((String)com.readNextMailSync());
-                }
-                */
+                }*/
+
 
 
 
