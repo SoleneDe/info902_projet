@@ -3,7 +3,10 @@
  */
 public class MessageSynchro extends AbstractMessage {
 
-    private int from; // id of the sender
+    /**
+     * ID of the sender
+     */
+    private int from;
 
     /**
      * Constructor for a MessageSynchro

@@ -10,11 +10,30 @@ import java.util.concurrent.Semaphore;
  * Class mostly used to test operations of Com
  */
 public class Process implements Runnable, Lamport {
+    /**
+     * Thread running
+     */
     private Thread thread;
+    /**
+     * Should run while its alive, when false it will eventually stop running
+     */
     private boolean alive;
+    /**
+     * True when it stopped running
+     */
     private boolean dead;
+    /**
+     * Value of the Lamport clock, incremented when some events happen (sending or receiving messages mostly)
+     */
     private int clock = 0;
+    /**
+     * Used to lock the clock, that can be tampered by both the Process and its Com
+     */
     private Semaphore semaphore;
+    /**
+     * The object managing the communications with other processes
+     * Received messages can be found in its mailboxes
+     */
     private Com com;
 
     /**
@@ -50,7 +69,7 @@ public class Process implements Runnable, Lamport {
             try{
 
                 // nouveau lancé de dé
-                /*broadcastData.clear();
+                broadcastData.clear();
                 Thread.sleep(500);
                 int die = throwDie(6); // dé à 6 faces
                 System.out.println(this.thread.getName() + " : " + die);
@@ -103,9 +122,12 @@ public class Process implements Runnable, Lamport {
                 }
 
                 // tous les processus doivent finir avant de relancer les dés
-                com.synchronize();*/
+                com.synchronize();
 
 
+
+                // Test broadcastSync
+                /*
                 Thread.sleep(50);
 
                 if(com.getId() == 0){
@@ -124,13 +146,17 @@ public class Process implements Runnable, Lamport {
 
                     System.out.println((String)com.readNextBoadcastMailSync());
                 }
+                */
 
-                /*Thread.sleep(50);
+
+                // Test sendToSync()
+                /*
+                Thread.sleep(50);
 
                 if(com.getId() == 0){
 
                     com.sendToSync("hello",1);
-                    System.out.println("send done");
+                    System.out.println("Send done");
 
                 }
 
@@ -142,9 +168,9 @@ public class Process implements Runnable, Lamport {
                         Thread.sleep(50);
                     }
 
-                    System.out.println((String)com.readNextBoadcastMailSync());
-                }*/
-
+                    System.out.println((String)com.readNextMailSync());
+                }
+                */
 
 
 

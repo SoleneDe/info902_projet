@@ -3,7 +3,10 @@
  */
 public class MessageTo extends AbstractMessage {
 
-    private int idDest; // process id of the destination
+    /**
+     * ID of the destination
+     */
+    private int idDest;
 
     /**
      * Constructor for a MessageTo

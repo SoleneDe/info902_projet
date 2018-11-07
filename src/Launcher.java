@@ -1,3 +1,6 @@
+/**
+ * Main class, to start running the processes and decide when to stop them
+ */
 public class Launcher {
 
     public static void main(String[] args){

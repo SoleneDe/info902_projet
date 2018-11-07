@@ -75,6 +75,7 @@ public class Com {
     public void unregister()
     {
         this.bus.unRegisterSubscriber(this);
+        Com.nbProcess--;
     }
 
     /**
@@ -234,21 +235,16 @@ public class Com {
                         e.printStackTrace();
                     }
                 }
-                t.setId((this.id + 1) % Com.nbProcess);
-                //if ( !this.dead ) {
-                    bus.postEvent(t);
-                //}
+
                 stateToken = "null";
-
-            }else{
-
-                t.setId((this.id + 1) % Com.nbProcess);
-                //if ( !this.dead ) {
-                    bus.postEvent(t);
-                //}
             }
-        }
 
+            if (Com.nbProcess > 0) {
+                t.setId((this.id + 1) % Com.nbProcess);
+                bus.postEvent(t);
+            }
+
+        }
     }
 
     /**
@@ -343,22 +339,16 @@ public class Com {
 
         bus.postEvent(m);
 
-        //int nbPro = Com.nbProcess;
+        // Wait to get an ack from every other process
         while(ackBroadcastSync < Com.nbProcess-1)
         {
-            System.out.println("aie alone");
             try{
                 Thread.sleep(100);
             }catch(Exception e){
                 e.printStackTrace();
             }
-
-            /*if(nbPro != Com.nbProcess)
-            {
-                System.out.println("break");
-                break;
-            }*/
         }
+
         System.out.println("[" + this.id + "] ackBroadcastSync received, with clock=" + p.getClock());
         ackBroadcastSync -= Com.nbProcess-1;
 
@@ -476,7 +466,6 @@ public class Com {
         bus.postEvent(m);
 
         while(!ackSendToSync){
-
 
             try{
                 Thread.sleep(100);

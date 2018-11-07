@@ -4,7 +4,13 @@
  */
 public class HeartbitMessage {
 
+    /**
+     * To signal if it's alive, else it's going to stop
+     */
     private boolean isAlive;
+    /**
+     * ID of the sender
+     */
     private int id;
 
     /**
