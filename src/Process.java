@@ -44,13 +44,13 @@ public class Process implements Runnable, Lamport {
         ArrayList<Integer> broadcastData = new ArrayList<>();
 
         // launch the token to manage critical sections
-        com.startToken();
+       // com.startToken();
 
         while(this.alive){
             try{
 
                 // nouveau lancé de dé
-                broadcastData.clear();
+                /*broadcastData.clear();
                 Thread.sleep(500);
                 int die = throwDie(6); // dé à 6 faces
                 System.out.println(this.thread.getName() + " : " + die);
@@ -103,7 +103,36 @@ public class Process implements Runnable, Lamport {
                 }
 
                 // tous les processus doivent finir avant de relancer les dés
-                com.synchronize();
+                com.synchronize();*/
+
+
+                Thread.sleep(50);
+
+
+
+
+                if(com.getId() == 0){
+
+                    com.sendToSync("hello",1);
+                    System.out.println("send done");
+
+                }
+
+                if(com.getId()==1)
+                {
+
+                    while(com.checkMailSyncBoxSize() == 0 && this.alive)
+                    {
+                        System.out.println("wait");
+                        Thread.sleep(50);
+                    }
+
+                    System.out.println((String)com.readNextMailSync());
+                }
+
+
+
+
 
             }catch(Exception e){
 

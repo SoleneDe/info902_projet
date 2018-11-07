@@ -10,8 +10,10 @@ public class Com {
 
     private EventBusService bus;
     private String stateToken = "null";
-    private int ack = 0; // for the synchronization barrier
+    private int ackSynchronize = 0; // for the synchronization barrier
+    private boolean ackSendToSync = false;
     private Queue<Object> mails; // the mailbox where messages are stored
+    private Queue<Object> mailsSync;
     //Process
     private Lamport p;
     private int id;
@@ -29,6 +31,7 @@ public class Com {
         this.bus.registerSubscriber(this); // Auto enregistrement sur le bus afin que les methodes "@Subscribe" soient invoquees automatiquement.
         this.p = p;
         mails = new LinkedList<>();
+        mailsSync = new LinkedList<>();
     }
 
     /**
@@ -53,12 +56,31 @@ public class Com {
     }
 
     /**
+     * Take next mail, and remove it
+     * @return mail
+     */
+    public Object readNextMailSync()
+    {
+        if(mailsSync.isEmpty())
+        {
+            return null;
+        }
+        return mailsSync.remove();
+    }
+
+    /**
      * Returns the size of the map mails, representing the mailbox
      * @return The number of messages in the mailbox
      */
     public int checkMailBoxSize()
     {
         return mails.size();
+    }
+
+
+    public int checkMailSyncBoxSize()
+    {
+        return mailsSync.size();
     }
 
     /**
@@ -277,6 +299,91 @@ public class Com {
         }
     }
 
+
+    /**
+     * Send synchronously an object to a specific process
+     * @param o Data to be sent
+     * @param to ID of the destination
+     */
+    public void sendToSync(Object o, int to) {
+        p.lockClock();
+        p.setClock(p.getClock() + 1);
+        p.unlockClock();
+
+        System.out.println(this.id + " send [" + o + "] to [" + to + "], with clock at " + p.getClock());
+        SendToSyncMessage m = new SendToSyncMessage(o, p.getClock(), to, this.id);
+
+        bus.postEvent(m);
+
+        while(!ackSendToSync){
+
+            System.out.println("sendto loop");
+            try{
+                Thread.sleep(100);
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        System.out.println("[" + this.id + "] ackSendToSync received, with clock=" + p.getClock());
+        ackSendToSync = false;
+
+    }
+
+    /**
+     * Receive a message from a one-to-one communication, added as mail synchronously
+     * @param m The message to read
+     */
+    @Subscribe
+    public void recevFromSync(SendToSyncMessage m) {
+        if (this.id == m.getIdDest()) { // the current process is the destination
+            p.lockClock();
+
+            System.out.println(this.id + " receives in one to one: " + m.getPayload());
+            mailsSync.add(m.getPayload());
+
+            p.setClock(Math.max(p.getClock(), m.getClock()));
+            p.setClock(p.getClock() + 1);
+
+            p.unlockClock();
+
+            while(!mailsSync.isEmpty()){
+                System.out.println("receive loop");
+                try{
+                    Thread.sleep(100);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+
+            System.out.println("continue");
+            ackSendToSync = true;
+            sendAckTo(ackSendToSync, m.getIdOrigin());
+
+        }
+    }
+
+    private void sendAckTo(boolean ack, int to)
+    {
+        System.out.println(this.id + "sends ack");
+        AckMessage m = new AckMessage(ack,to);
+        bus.postEvent(m);
+    }
+
+    @Subscribe
+    public void receiveAck(AckMessage m)
+    {
+
+        if (this.id == m.getTo()){
+
+            System.out.println(this.id + "receives ack");
+            ackSendToSync = m.isAck();
+        }
+    }
+
+
+
+
     /**
      * Send a sync message and wait for every other process to send one before continuing
      */
@@ -291,8 +398,8 @@ public class Com {
 
         bus.postEvent(m);
 
-        // block until everyone sends an ack
-        while(ack < Com.nbProcess-1)
+        // block until everyone sends an ackSynchronize
+        while(ackSynchronize < Com.nbProcess-1)
         {
             try{
                 Thread.sleep(100);
@@ -300,8 +407,8 @@ public class Com {
                 e.printStackTrace();
             }
         }
-        System.out.println("[" + this.id + "] Every ACK received, with clock=" + p.getClock());
-        ack -= Com.nbProcess-1;
+        System.out.println("[" + this.id + "] Every ackSynchronize received, with clock=" + p.getClock());
+        ackSynchronize -= Com.nbProcess-1;
     }
 
     /**
@@ -320,8 +427,8 @@ public class Com {
             p.setClock(p.getClock() + 1);
             p.unlockClock();
 
-            // received ACK
-            ack++;
+            // received ackSynchronize
+            ackSynchronize++;
         }
     }
 
