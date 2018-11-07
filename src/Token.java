@@ -1,21 +1,34 @@
 /**
  * Type of a token message, to manage critical sections
+ * System message
  */
 public class Token {
 
-    private Object payload;
+    private int id;
 
-    public Token(Object payload) {
+    /**
+     * Constructor for a Token
+     * @param id ID of the owner of the Token
+     */
+    public Token(int id) {
 
-        this.payload = payload;
+        this.id = id;
 
     }
 
-    public Object getPayload() {
-        return payload;
+    /**
+     * Returns the ID of the owner of the Token
+     * @return id
+     */
+    public int getId() {
+        return id;
     }
 
-    public void setPayload(Object payload) {
-        this.payload = payload;
+    /**
+     * Set the ID of the owner
+     * @param id Owner of the Token
+     */
+    public void setId(int id) {
+        this.id = id;
     }
 }
