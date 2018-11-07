@@ -4,6 +4,9 @@
  */
 public class Token {
 
+    /**
+     * ID of the owner of the Token
+     */
     private int id;
 
     /**

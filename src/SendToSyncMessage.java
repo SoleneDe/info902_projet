@@ -1,7 +1,15 @@
+/**
+ * Type of a synchronized one-to-one message
+ */
 public class SendToSyncMessage extends AbstractMessage {
 
-
-    private int idDest;// process id of the destination
+    /**
+     * ID of the destination
+     */
+    private int idDest;
+    /**
+     * ID of the sender
+     */
     private int idOrigin;
 
     /**
@@ -25,7 +33,10 @@ public class SendToSyncMessage extends AbstractMessage {
         return idDest;
     }
 
-
+    /**
+     * Returns the ID of the sender
+     * @return idOrigin
+     */
     public int getIdOrigin() {
         return idOrigin;
     }
