@@ -4,27 +4,59 @@ import java.util.*;
 
 /**
  * Class taking care of the messages in the bus
- * A Lamport object can check its messages through the mailbox
+ * It's a middleware to supply the guava library
+ * A Lamport object can check its messages through mailboxes
  */
 public class Com {
 
+    /**
+     * Medium to make communication between process
+     */
     private EventBusService bus;
+    /**
+     * Token state: it can take value like "null", "request", "sc", "release"
+     */
     private String stateToken = "null";
-    private int ackSynchronize = 0; // for the synchronization barrier
+    /**
+     * Acknowledgment variable for a synchonization barrier
+     */
+    private int ackSynchronize = 0;
+    /**
+     * Acknowledgment variable for a one to one communication
+     */
     private boolean ackSendToSync = false;
+    /**
+     * Acknowledgment variable for a synchronous broadcast
+     */
     private int ackBroadcastSync = 0;
+    /**
+     * Mailbox for asynchronous messages
+     */
     private Queue<Object> mails; // the mailbox where messages are stored
+    /**
+     * Mailbox for synchronous one to one communication messages
+     */
     private Queue<Object> mailsSync;
+    /**
+     * Mailbox for synchronous broadcast messages
+     */
     private Queue<Object> broadcastMailsSync;
-    //Process
+    /**
+     * Process with a lamport clock
+     */
     private Lamport p;
+    /**
+     * Process's id
+     */
     private int id;
-
+    /**
+     * Alive process number
+     */
     private static int nbProcess = 0;
 
     /**
      * Constructor for Com
-     * @param p The Lamport object that needs to access the bus
+     * @param p The Lamport process object which needs to access the bus
      */
     public Com(Lamport p)
     {
@@ -38,7 +70,7 @@ public class Com {
     }
 
     /**
-     * When attribute p stops, it should unregister itself from the bus
+     * Unregistration demand from attributed process when it stops, it should unregister itself from the bus
      */
     public void unregister()
     {
@@ -46,8 +78,8 @@ public class Com {
     }
 
     /**
-     * Take next mail, and remove it
-     * @return mail
+     * Read next mail, and remove it from the asynchronous message mailbox
+     * @return Object
      */
     public Object readNextMail()
     {
@@ -59,8 +91,8 @@ public class Com {
     }
 
     /**
-     * Take next mail, and remove it
-     * @return mail
+     * Read next mail, and remove it from the synchronous one to one communication message mailbox
+     * @return Object
      */
     public Object readNextMailSync()
     {
@@ -72,7 +104,7 @@ public class Com {
     }
 
     /**
-     * Take next mail, and remove it
+     * Read next mail, and remove it from the synchronous broadcast message mailbox
      * @return mail
      */
     public Object readNextBoadcastMailSync()
@@ -86,7 +118,7 @@ public class Com {
 
 
     /**
-     * Returns the size of the map mails, representing the mailbox
+     * Returns the size of the asynchronous message mailbox
      * @return The number of messages in the mailbox
      */
     public int checkMailBoxSize()
@@ -94,13 +126,19 @@ public class Com {
         return mails.size();
     }
 
-
+    /**
+     * Returns the size of the synchronous one to one communication message mailbox
+     * @return The number of messages in the mailbox
+     */
     public int checkMailSyncBoxSize()
     {
         return mailsSync.size();
     }
 
-
+    /**
+     * Returns the size of the synchronous broadcast message mailbox
+     * @return The number of messages in the mailbox
+     */
     public int checkBroadcastSyncMailBoxSize()
     {
         return broadcastMailsSync.size();
@@ -110,8 +148,8 @@ public class Com {
 
 
     /**
-     * Give a id from a process demands
-     * @return (int) process id
+     * Give a id from a process demand
+     * @return process id
      */
     public int getId(){
         return this.id;
@@ -241,7 +279,7 @@ public class Com {
 
     /**
      * Should be used at the very start,
-     * the last Com created will get the token, to start the cycle
+     * the last Process created will get the token, to start the cycle
      */
     public void startToken()
     {
@@ -254,7 +292,7 @@ public class Com {
 
     /**
      * Send object to every other process' mailbox
-     * @param o Data to send
+     * @param o Data to be sent
      */
     public void broadcast(Object o)
     {
@@ -328,12 +366,12 @@ public class Com {
 
 
     /**
-     * Receive a message from a broadcast communication, added as mail synchronously
+     * Receive a message from a broadcast, added as mail synchronously
      * @param m The message to read
      */
     @Subscribe
     public void recevBroadcastSync(BroadcastSyncMessage m) {
-        if (this.id != m.getIdOrigin()) { // the current process is the destination
+        if (this.id != m.getSenderId()) { // the current process is the destination
             p.lockClock();
 
             System.out.println(this.id + " receives in broadcast: " + m.getPayload());
@@ -354,12 +392,15 @@ public class Com {
             }
 
 
-            sendBroadcastAckTo(m.getIdOrigin());
+            sendBroadcastAckTo(m.getSenderId());
 
         }
     }
 
-
+    /**
+     * Send a acknowledgment for synchronous broadcast to the sender
+     * @param to sender's id
+     */
     private void sendBroadcastAckTo( int to)
     {
         System.out.println(this.id + " sends ack");
@@ -367,6 +408,10 @@ public class Com {
         bus.postEvent(m);
     }
 
+    /**
+     * Receive the acknowledgment from a synchronous broadcast
+     * @param m ack
+     */
     @Subscribe
     public void receiveAck(AckBroadcastMessage m)
     {
@@ -381,7 +426,7 @@ public class Com {
     /**
      * Send an object to a specific process
      * @param o Data to be sent
-     * @param to ID of the destination
+     * @param to recipient's id
      */
     public void sendTo(Object o, int to) {
         p.lockClock();
@@ -418,7 +463,7 @@ public class Com {
     /**
      * Send synchronously an object to a specific process
      * @param o Data to be sent
-     * @param to ID of the destination
+     * @param to recipient's id
      */
     public void sendToSync(Object o, int to) {
         p.lockClock();
@@ -432,7 +477,7 @@ public class Com {
 
         while(!ackSendToSync){
 
-            System.out.println("sendto loop");
+
             try{
                 Thread.sleep(100);
             }catch(Exception e){
@@ -463,7 +508,7 @@ public class Com {
             p.unlockClock();
 
             while(!mailsSync.isEmpty()){
-                System.out.println("receive loop");
+
                 try{
                     Thread.sleep(100);
                 }catch(Exception e){
@@ -471,28 +516,35 @@ public class Com {
                 }
             }
 
-            System.out.println("continue");
             ackSendToSync = true;
-            sendAckTo(ackSendToSync, m.getIdOrigin());
+            sendAckTo(m.getIdOrigin());
 
         }
     }
 
-    private void sendAckTo(boolean ack, int to)
+    /**
+     * Send acknowledgment for a one to one synchronous communication
+     * @param to recipient's id
+     */
+    private void sendAckTo( int to)
     {
         System.out.println(this.id + "sends ack");
-        AckMessage m = new AckMessage(ack,to);
+        AckSendToMessage m = new AckSendToMessage(to);
         bus.postEvent(m);
     }
 
+    /**
+     * Receive the acknowledgment for a one to one synchronous communication
+     * @param m ack
+     */
     @Subscribe
-    public void receiveAck(AckMessage m)
+    public void receiveAck(AckSendToMessage m)
     {
 
         if (this.id == m.getTo()){
 
             System.out.println(this.id + "receives ack");
-            ackSendToSync = m.isAck();
+            ackSendToSync = true;
         }
     }
 
@@ -547,7 +599,6 @@ public class Com {
         }
     }
 
-    // TODO broadcastSync & sendToSync
 
 
 }

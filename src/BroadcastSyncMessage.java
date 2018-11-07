@@ -1,29 +1,39 @@
+/**
+ * Synchronous broadcast message type
+ */
 public class BroadcastSyncMessage extends AbstractMessage {
 
 
-    private int idOrigin;
-
     /**
-     * Constructor for a MessageTo
-     * @param payload The object to send as a message
-     * @param clock The value of the clock of the sender
-     * @param idOrigin The ID of the origin
+     * Sender's id
      */
-    public BroadcastSyncMessage(Object payload, int clock, int idOrigin) {
-        super(payload, clock);
-        this.idOrigin = idOrigin;
-    }
+    private int sender;
 
-    public int getIdOrigin() {
-        return idOrigin;
+    /**
+     * Constructor for a BroadcastSyncMessage
+     * @param payload The object to send as a message content
+     * @param clock The value of the clock of the sender
+     * @param sender sender's id
+     */
+    public BroadcastSyncMessage(Object payload, int clock, int sender) {
+        super(payload, clock);
+        this.sender = sender;
     }
 
     /**
-     * Display a MessageTo
+     * Returns sender's id
+     * @return sender
+     */
+    public int getSenderId() {
+        return sender;
+    }
+
+    /**
+     * Display a BroadcastSyncMessage
      * @return a String
      */
     public String toString() {
-        return "Object: " + payload + ", from: " +idOrigin;
+        return "Object: " + payload + ", from: " + sender;
     }
 }
 

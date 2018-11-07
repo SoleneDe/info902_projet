@@ -1,12 +1,19 @@
 /**
- * Defines operations that any message on the bus should implement
+ * Defines operations that any applicative message on the bus should implement
  */
 public abstract class AbstractMessage {
-    protected Object payload=null; // actual content of the message
-    protected int clock; // to update the clock of the receiver
 
     /**
-     * Basic constructor for any AbstractMessage
+     * Message content
+     */
+    protected Object payload=null;
+    /**
+     * Lamport clock to stamp the message
+     */
+    protected int clock;
+
+    /**
+     * Basic constructor for a AbstractMessage
      * @param payload The object to send as a message
      * @param clock The value of the clock of the sender
      */
