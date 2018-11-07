@@ -12,8 +12,10 @@ public class Com {
     private String stateToken = "null";
     private int ackSynchronize = 0; // for the synchronization barrier
     private boolean ackSendToSync = false;
+    private int ackBroadcastSync = 0;
     private Queue<Object> mails; // the mailbox where messages are stored
     private Queue<Object> mailsSync;
+    private Queue<Object> broadcastMailsSync;
     //Process
     private Lamport p;
     private int id;
@@ -32,6 +34,7 @@ public class Com {
         this.p = p;
         mails = new LinkedList<>();
         mailsSync = new LinkedList<>();
+        broadcastMailsSync = new LinkedList<>();
     }
 
     /**
@@ -69,6 +72,20 @@ public class Com {
     }
 
     /**
+     * Take next mail, and remove it
+     * @return mail
+     */
+    public Object readNextBoadcastMailSync()
+    {
+        if(broadcastMailsSync.isEmpty())
+        {
+            return null;
+        }
+        return broadcastMailsSync.remove();
+    }
+
+
+    /**
      * Returns the size of the map mails, representing the mailbox
      * @return The number of messages in the mailbox
      */
@@ -82,6 +99,15 @@ public class Com {
     {
         return mailsSync.size();
     }
+
+
+    public int checkBroadcastSyncMailBoxSize()
+    {
+        return broadcastMailsSync.size();
+    }
+
+
+
 
     /**
      * Give a id from a process demands
@@ -243,6 +269,8 @@ public class Com {
         p.unlockClock();
     }
 
+
+
     /**
      * Receive a message from a broadcast, added as mail
      * @param m The message to read
@@ -260,6 +288,93 @@ public class Com {
             p.setClock(p.getClock() + 1);
 
             p.unlockClock();
+        }
+    }
+
+    /**
+     * Broadcast synchronously an object
+     * @param o Data to be sent
+     */
+    public void broadcastSync(Object o) {
+        p.lockClock();
+        p.setClock(p.getClock() + 1);
+        p.unlockClock();
+
+        System.out.println(this.id + " send [" + o + "], with clock at " + p.getClock());
+        BroadcastSyncMessage m = new BroadcastSyncMessage(o, p.getClock(), this.id);
+
+        bus.postEvent(m);
+
+        //int nbPro = Com.nbProcess;
+        while(ackBroadcastSync < Com.nbProcess-1)
+        {
+            System.out.println("aie alone");
+            try{
+                Thread.sleep(100);
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+
+            /*if(nbPro != Com.nbProcess)
+            {
+                System.out.println("break");
+                break;
+            }*/
+        }
+        System.out.println("[" + this.id + "] ackBroadcastSync received, with clock=" + p.getClock());
+        ackBroadcastSync -= Com.nbProcess-1;
+
+    }
+
+
+    /**
+     * Receive a message from a broadcast communication, added as mail synchronously
+     * @param m The message to read
+     */
+    @Subscribe
+    public void recevBroadcastSync(BroadcastSyncMessage m) {
+        if (this.id != m.getIdOrigin()) { // the current process is the destination
+            p.lockClock();
+
+            System.out.println(this.id + " receives in broadcast: " + m.getPayload());
+            broadcastMailsSync.add(m.getPayload());
+
+            p.setClock(Math.max(p.getClock(), m.getClock()));
+            p.setClock(p.getClock() + 1);
+
+            p.unlockClock();
+
+            while(!broadcastMailsSync.isEmpty()){
+
+                try{
+                    Thread.sleep(100);
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+
+
+            sendBroadcastAckTo(m.getIdOrigin());
+
+        }
+    }
+
+
+    private void sendBroadcastAckTo( int to)
+    {
+        System.out.println(this.id + " sends ack");
+        AckBroadcastMessage m = new AckBroadcastMessage(to);
+        bus.postEvent(m);
+    }
+
+    @Subscribe
+    public void receiveAck(AckBroadcastMessage m)
+    {
+
+        if (this.id == m.getTo()){
+
+            System.out.println(this.id + " receives broadcast ack");
+            ackBroadcastSync++;
         }
     }
 

@@ -44,7 +44,7 @@ public class Process implements Runnable, Lamport {
         ArrayList<Integer> broadcastData = new ArrayList<>();
 
         // launch the token to manage critical sections
-       // com.startToken();
+        com.startToken();
 
         while(this.alive){
             try{
@@ -108,8 +108,24 @@ public class Process implements Runnable, Lamport {
 
                 Thread.sleep(50);
 
+                if(com.getId() == 0){
 
+                    com.broadcastSync("hello");
 
+                }
+
+                if(com.getId()==1 || com.getId() == 2)
+                {
+
+                    while(com.checkBroadcastSyncMailBoxSize() == 0 && this.alive)
+                    {
+                        Thread.sleep(50);
+                    }
+
+                    System.out.println((String)com.readNextBoadcastMailSync());
+                }
+
+                /*Thread.sleep(50);
 
                 if(com.getId() == 0){
 
@@ -118,18 +134,16 @@ public class Process implements Runnable, Lamport {
 
                 }
 
-                if(com.getId()==1)
+                if(com.getId()==1 )
                 {
 
                     while(com.checkMailSyncBoxSize() == 0 && this.alive)
                     {
-                        System.out.println("wait");
                         Thread.sleep(50);
                     }
 
-                    System.out.println((String)com.readNextMailSync());
-                }
-
+                    System.out.println((String)com.readNextBoadcastMailSync());
+                }*/
 
 
 
